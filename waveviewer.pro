@@ -1,10 +1,11 @@
 TEMPLATE = app
 
-QT += qml quick
+QT += qml quick multimedia
 CONFIG += c++11
 
 SOURCES += main.cpp \
-    waveviewer.cpp
+    waveviewer.cpp \
+    qrsnooper.cpp
 
 RESOURCES += qml.qrc
 RESOURCES +=
@@ -23,7 +24,8 @@ QML_IMPORT_PATH =
 include(deployment.pri)
 HEADERS += \
     waveviewer.h \
-    real_version.h
+    real_version.h \
+    qrsnooper.h
 
 DISTFILES += \
     android/AndroidManifest.xml \
@@ -32,7 +34,8 @@ DISTFILES += \
     android/res/values/libs.xml \
     android/build.gradle \
     android/gradle/wrapper/gradle-wrapper.properties \
-    android/gradlew.bat
+    android/gradlew.bat \
+    qrfinderworker.js
 
 OTHER_FILES +=
 
