@@ -1,28 +1,33 @@
 #ifndef QRSNOOPER_H
 #define QRSNOOPER_H
 
-#include <QAbstractVideoSurface>
+#include <QObject>
 #include <QVideoFrame>
+#include <QVideoProbe>
+
 #include <QZXing.h>
 
-class QRSearcher : public QAbstractVideoSurface
+class QRSnooper : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QAbstractVideoSurface videoSurface MEMBER videoSurface)
-public:
-    QRSearcher(QObject* parent = nullptr);
 
-    virtual bool present(const QVideoFrame& frame);
+public:
+    QRSnooper(QObject* parent = nullptr);
+
+    Q_INVOKABLE void setInputQMLCamera(const QVariant& cameraVar);
 
 signals:
     void decodedQRCode(QString decoded);
 
+private slots:
+    void handleVideoFrame(const QVideoFrame& probed);
+
 private:
 
-    QAbstractVideoSurface* output;
     const QVideoFrame* lastFrame;
+    QVideoProbe* probe;
 
-    QZXing decoder;
+    QZXing* decoder;
 };
 
 #endif // QRSNOOPER_H

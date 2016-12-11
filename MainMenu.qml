@@ -3,6 +3,7 @@ import QtQuick 2.6
 import QtQuick.Controls 1.0
 import QtQuick.Window 2.0
 import QtQuick.Dialogs 1.2
+import QRSnooper 1.0
 import WaveViewer 1.0
 
 import QtMultimedia 5.6
@@ -97,12 +98,7 @@ Rectangle {
 
         camera.start();
         videoOutput.visible = true;
-    }
-
-    function captureQRPic()
-    {
-        camera.imageCapture.capture();
-        videoOutput.visible = false;
+        //qrscanner.running = true;
     }
 
 
@@ -119,14 +115,14 @@ Rectangle {
             source: "qrc:/mainassets/account.png"
         }
         onClicked: {
-          /*  if (Qt.platform.os === "android")
+            if (Qt.platform.os === "android")
             {
                 initiateQRPic(true);
             }
             else
-            {*/
+            {
                 fd.open()
-          //  }
+            }
         }
     }
 
@@ -201,13 +197,67 @@ Rectangle {
         id: qrdecoder
         enabledDecoders: QZXing.DecoderFormat_QR_CODE
         onDecodingFinished: {
-            if (!succeeded)
+            /*if (!succeeded)
             {
                 message.title = "Failure";
                 message.text = "Could not parse QR code. Please try again.";
                 message.visible = true;
-            }
+            }*/
         }
+    }
+
+    /*Timer {
+        id: qrscanner
+        interval: 1000
+        running: false
+        repeat: true
+        onTriggered: {
+            console.log("Timer expired!")
+            camera.imageCapture.capture();
+        }
+    }*/
+
+    /* Detection of a QR code in an image takes a few seconds of CPU time, so it needs
+     * to happen in a new thread to avoid blocking the UI.
+     */
+    WorkerScript {
+        id: qrfinderworker
+        source: "workerscript.js"
+
+        // This processes the result of computation when it is done
+        onMessage: {
+            decoded = messageObject.decoded;
+            console.log("Decoded: " + decoded);
+            /*if (decoded.length > 0)
+            {
+                if (entity)
+                {
+                    var res = WV.setUsersEntity(decoded);
+                    console.log("Set entity: " + res);
+                    if (res)
+                    {
+                        message.title = "Success";
+                        message.text = "The entity was successfully changed.";
+                        message.visible = true;
+                    }
+                    else
+                    {
+                        message.title = "Failure";
+                        message.text = "The entity could not be set due to an internal error."
+                        message.visible = true;
+                    }
+                }
+                else
+                {
+                    WV.loadWavelet(decoded);
+                }
+            }*/
+        }
+    }
+
+    Image {
+        id: previewPicture
+        visible: false
     }
 
     Camera {
@@ -221,34 +271,24 @@ Rectangle {
         }
 
         imageCapture {
-            onImageSaved: {
-                var decoded = qrdecoder.decodeImageQML("file://" + path);
-                if (decoded.length > 0)
-                {
-                    if (entity)
-                    {
-                        var res = WV.setUsersEntity(decoded);
-                        console.log("Set entity: " + res);
-                        if (res)
-                        {
-                            message.title = "Success";
-                            message.text = "The entity was successfully changed.";
-                            message.visible = true;
-                        }
-                        else
-                        {
-                            message.title = "Failure";
-                            message.text = "The entity could not be set due to an internal error."
-                            message.visible = true;
-                        }
-                    }
-                    else
-                    {
-                        WV.loadWavelet(decoded);
-                    }
-                }
-                camera.stop();
+            onImageCaptured: {
+                var filepath = preview;
+                var message = {"qrdecoder": qrdecoder, "filepath": filepath};
+
+                //qrfinderworker.sendMessage(message);
             }
+        }
+    }
+
+    QRSnooper {
+        id: qrsnooper
+
+        Component.onCompleted: {
+            qrsnooper.setInputQMLCamera(camera);
+        }
+
+        onDecodedQRCode: {
+            qDebug("Decoded!");
         }
     }
 
@@ -265,7 +305,10 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                captureQRPic();
+                //camera.imageCapture.capture();
+                videoOutput.visible = false;
+                //qrscanner.running = false;
+                camera.stop();
             }
         }
     }

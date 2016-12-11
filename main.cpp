@@ -6,6 +6,7 @@
 #include <QtAndroid>
 #endif
 #include <QZXing.h>
+#include "qrsnooper.h"
 #include "waveviewer.h"
 
 #include <libbw.h>
@@ -18,6 +19,7 @@ int main(int argc, char *argv[])
     qDebug() << "finished init guiapp";
     initLibBW();
     initLibMrPlotter();
+    qmlRegisterType<QRSnooper>("QRSnooper", 1, 0, "QRSnooper");
     QZXing::registerQMLTypes();
 
     WaveViewer *wv = WaveViewer::instance();
